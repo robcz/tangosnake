@@ -1,0 +1,7 @@
+lib/
+*.pyc
+include/
+bin/
+.idea/
+tango.zip
+aws.config
