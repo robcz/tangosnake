@@ -11,21 +11,33 @@ logger = logging.getLogger("tango")
 logger.setLevel(logging.DEBUG)
 
 def handler(jsonArgs, context):
+    request = jsonArgs['request']
+    if (request['type'] == 'IntentRequest'):
+        return handleIntent(request, context)
+    elif (request['type'] == 'LaunchRequest'):
+        return handleLaunch(request, context)
+    return errorResponse("Unhandled request type: " + request['type'])
+
+def handleLaunch(request, context):
+    args = ['bitcoin', 'ethereum']
+    return successResponse("default coins", goFetch(args))
+
+def handleIntent(request, context):
     args = []
     try:
-        coinType = jsonArgs['request']['intent']['slots']['coin']['value']
+        coinType = request['intent']['slots']['coin']['value']
         # if the coinType is recognized as valid then we don't need to worry about name resolution
         if not CoinCollection().isValid(coinType):
-            resolveSlot(jsonArgs, args)
+            resolveSlot(request, args)
         else:
             args.append(coinType)
         return successResponse(coinType, goFetch(args))
     except (KeyError, ValueError) as ke:
         return errorResponse(ke)
 
-def resolveSlot(jsonArgs, fetchArgs):
+def resolveSlot(request, fetchArgs):
     try:
-        resolutions = jsonArgs['request']['intent']['slots']['coin']['resolutions']['resolutionsPerAuthority']
+        resolutions = request['intent']['slots']['coin']['resolutions']['resolutionsPerAuthority']
         for resolution in resolutions:
             resValues = resolution['values']
             for resValue in resValues:
@@ -49,8 +61,8 @@ def goFetch(args):
 
 # TODO: Build valid response object
 def errorResponse(errorValue):
-    response = "An error occurred\n" + str(errorValue)
-    return response
+    logger.error("An error occurred\n" + str(errorValue))
+    return successResponse("Unknown", "I'm sorry, I don't recognize a crypto currency name to help you with.")
 
 # TODO: Build valid response object
 def successResponse(coinType, narrative):
