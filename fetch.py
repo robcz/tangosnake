@@ -45,7 +45,9 @@ def resolveSlot(request, fetchArgs):
                 logger.debug("Resolved type: " + coinType)
                 fetchArgs.append(coinType)
     except KeyError as ke:
-        logger.error("Resolution error with key: " + str(ke))
+        errMsg = "Resolution unable to be performed due to key error: " + str(ke)
+        logger.error(errMsg)
+        raise KeyError(ke)
     return fetchArgs
 
 def goFetch(args):
@@ -84,8 +86,11 @@ def buildOutputSpeech(narrative):
 def buildCard(coinType, narrative):
     card = {}
     card['type'] = "Simple"
-    card['title'] = "Tango fetched for " + coinType + " on " + time.strftime("%d/%m/%Y") + " at " + time.strftime("%I:%M %p %Z")
-    card['text'] = narrative
+    if (coinType == 'Unknown'):
+        card['title'] = "Tango wasn't able to help you"
+    else:
+        card['title'] = "Tango fetched for " + coinType + " on " + time.strftime("%m/%d/%Y") + " at " + time.strftime("%I:%M %p %Z")
+    card['content'] = narrative
     return card
 
 if __name__ == '__main__':
